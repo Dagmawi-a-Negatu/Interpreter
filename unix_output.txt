@@ -1,0 +1,72 @@
+2 - @ < 2;
+===> '@ '
+Lexical Error: not a lexeme
+
+8-cat;
+===> 'cat'
+Lexical Error: not a lexeme
+
+cat-9;
+===> 'cat'
+Lexical Error: not a lexeme
+
+9+2;
+Syntax OK
+Value is 11
+
+3 ^ 2;
+Syntax OK
+Value is 9
+
+2 ^ 2 ^         3;
+Syntax OK
+Value is 256
+
+(2^2)^3;
+Syntax OK
+Value is 64
+
+2^(2^3);
+Syntax OK
+Value is 256
+
+6-7+8;
+Syntax OK
+Value is 7
+
+(6-7)+8;
+Syntax OK
+Value is 7
+
+6-(7+8);
+Syntax OK
+Value is -9
+
+1 + 2 < 9;
+Syntax OK
+Value is 2
+
+1 + 7 == 9 < 2;
+Syntax OK
+Value is 2
+
+9<2;
+Syntax OK
+Value is 0
+
+1== 0;
+Syntax OK
+Value is 0
+
+1 == 0
+===> ';' expected
+Syntax Error
+
+4 + 8 * 10 < 9;
+Syntax OK
+Value is 4
+
+8-9-(7*6;
+===> ')' expected
+Syntax Error
+
