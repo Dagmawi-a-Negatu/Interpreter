@@ -34,6 +34,7 @@ typedef enum {
     INT_LITERAL, UNKNOWN
 } TokenCategory;
 
+
 /**                                                                             
  * Determines if a character is neither a space nor a tab.                      
  *                                                                              

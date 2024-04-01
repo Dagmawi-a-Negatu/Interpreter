@@ -1,0 +1,10 @@
+Syntax OK
+Value is 6
+Syntax OK
+Value is 4
+Syntax OK
+Value is 25
+Syntax OK
+Value is 7
+Syntax OK
+Value is 9
