@@ -19,6 +19,7 @@
 int expr(char **expr);
 int ttail(char **expr, int acc);
 int term(char **expr);
+char add_sub_tok(char **expr);
 
 
 /*
@@ -48,19 +49,20 @@ int expr(char **expr) {
 }
 
 int ttail(char **expr, int acc) {
-    while (isspace(**expr)) (*expr)++;
-    if (**expr == '+' || **expr == '-') {
-        char op = *(*expr)++;
+    char op = add_sub_tok(expr);
+
+    if (op == '+' || op == '-') {
         int term_val = term(expr);
         if (term_val == ERROR) return ERROR;
         acc = (op == '+') ? acc + term_val : acc - term_val;
         return ttail(expr, acc);
-    } else if (**expr == ';') {
-        (*expr)++;
+    } else if (op == '\0' && **expr == ';') {
+        (*expr)++; 
         return acc;
     } else {
-        return ERROR;
+        return ERROR; 
     }
+   
 }
 
 int term(char **expr) {
@@ -73,4 +75,50 @@ int term(char **expr) {
         *expr = next;
         return value;
     }
+}
+
+// The stail function with the use of mul_div_tok function
+int stail(char **expr, int acc) {
+    char op = mul_div_tok(expr);  // Use the helper function to get the operator
+
+    while (op != '\0') {
+        int stmt_val = stmt(expr);  // Assuming stmt is correctly implemented
+        if (stmt_val == ERROR) {
+            return ERROR;
+        }
+
+        if (op == '*') {
+            acc *= stmt_val;
+        } else if (op == '/') {
+            if (stmt_val == 0) {
+                fprintf(stderr, "Runtime Error: Division by zero.\n");
+                return ERROR;  // Division by zero error
+            }
+            acc /= stmt_val;
+        }
+
+        op = mul_div_tok(expr);  // Get the next operator if there is more to process
+    }
+    
+    return acc;  // Return the accumulated result
+}
+
+
+
+// Function to recognize addition and subtraction tokens
+char add_sub_tok(char **expr) {
+    while (isspace(**expr)) (*expr)++;
+    if (**expr == '+' || **expr == '-') {
+        return *(*expr)++;  // Consume and return the operator
+    }
+    return '\0';  // Return null character if no add/sub token is found
+}
+
+// Function to recognize multiplication and division tokens
+char mul_div_tok(char **expr) {
+    while (isspace(**expr)) (*expr)++;
+    if (**expr == '*' || **expr == '/') {
+        return *(*expr)++;  // Consume and return the operator
+    }
+    return '\0';  // Return null character if no mul/div token is found
 }
