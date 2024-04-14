@@ -24,11 +24,13 @@ int main(int argc, char *argv[]) {
 
     while ((read = getline(&line, &len, inputFile)) != -1) {
         // Remove newline character if present
-        if (line[read - 1] == '\n') line[read - 1] = '\0';
+        if (read > 0 && line[read - 1] == '\n') line[read - 1] = '\0';
+        
+        fprintf(outputFile, "%s\n", line); // Print the expression as it is
 
         int result = parse_expression(line);
         if (result == ERROR) {
-            fprintf(outputFile, "===> Syntax Error\n");
+            fprintf(outputFile, "Syntax Error\n");
         } else {
             fprintf(outputFile, "Syntax OK\n");
             fprintf(outputFile, "Value is %d\n", result);

@@ -1,10 +1,33 @@
-Syntax OK
-Value is 6
-Syntax OK
-Value is 4
-Syntax OK
-Value is 25
-Syntax OK
-Value is 7
+4 + 5;
 Syntax OK
 Value is 9
+10 - 3;
+Syntax OK
+Value is 7
+6 * 7;
+Syntax OK
+Value is 42
+8 / 2;
+Syntax OK
+Value is 4
+6 / 2;
+Syntax OK
+Value is 3
+2 + 3 * 4;
+Syntax OK
+Value is 14
+1 + 2 * 3;
+Syntax OK
+Value is 7
+3 * 4;
+Syntax OK
+Value is 12
+2 * 2;
+Syntax OK
+Value is 4
+-5 + 3;
+Syntax OK
+Value is -2
+5 - 7;
+Syntax OK
+Value is -2
