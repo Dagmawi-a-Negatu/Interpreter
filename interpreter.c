@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
         
         fprintf(outputFile, "%s\n", line); // Print the expression as it is
 
-        int result = parse_expression(line);
+        int result = bexpr(line);
         if (result == ERROR) {
             fprintf(outputFile, "Syntax Error\n");
         } else {

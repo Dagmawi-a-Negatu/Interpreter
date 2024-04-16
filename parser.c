@@ -7,31 +7,17 @@
  */
 
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <math.h>
 #include "tokenizer.h"
 #include "parser.h"
 
 #define ERROR -999999
-
-int expr(char **expr);
-int ttail(char **expr, int acc);
-int term(char **expr);
-int stail(char **expr, int acc);
-int stmt(char **expr);
-int ftail(char **expr, int acc);
-int factor(char **expr);
-int expp(char **expr);
-char add_sub_tok(char **expr);
-char mul_div_tok(char **expr);
-char* compare_tok(char **expr);
-int num(char **expr);
-//int is_operator(char c);
 
 /*
  * <bexpr> ::= <expr> ;
@@ -49,33 +35,44 @@ int num(char **expr);
  * <num> ::=  {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}+
  */
 
-int parse_expression(char *token) {
+int bexpr(char *token) {
     return expr(&token);
 }
 
 int expr(char **expr) {
     int term_val = term(expr);
-    if (term_val == ERROR) return ERROR;
+    if (term_val == ERROR) 
+        return ERROR;
+    
     return ttail(expr, term_val);
+
+   
 }
 
 int ttail(char **expr, int acc) {
-    char op = add_sub_tok(expr);
+   char op = add_sub_tok(expr); 
 
-    if (op == '+' || op == '-') {
+    while (op != '\0') {
         int term_val = term(expr);
         if (term_val == ERROR) return ERROR;
-        acc = (op == '+') ? acc + term_val : acc - term_val;
-        return ttail(expr, acc);
-    } else if (**expr == ';' || **expr == '\0') {
-        if (**expr == ';') {
-            (*expr)++;  // Consume ';' if present
+
+        if (op == '+') {
+            acc += term_val; 
+        } else if (op == '-') {
+            acc -= term_val; 
         }
-        return acc;
-    } else {
-        return ERROR; 
+
+        op = add_sub_tok(expr);
     }
-   
+
+    if (**expr == ';' || **expr == '\0') {                                      
+        if (**expr == ';') {                                                    
+            (*expr)++;                                                          
+        }                                                                       
+        return acc;                                                             
+    } else {                                                                    
+        return ERROR;                                                           
+    } 
 }
 
 int term(char **expr) {
@@ -83,149 +80,160 @@ int term(char **expr) {
     if (stmt_val == ERROR) {
         return ERROR;
     }
-    return stail(expr, stmt_val);  
+    return stail(expr, stmt_val);
 }
 
-// The stail function with the use of mul_div_tok function
 int stail(char **expr, int acc) {
     char op = mul_div_tok(expr);
 
     while (op != '\0') {
+        int stmt_val = stmt(expr);        
+
         if (op == (char)ERROR) {
-            return ERROR; // Incorrect token, return error
+            return ERROR;
         }
 
-        (*expr)++; // Consume the operator
-
-        int stmt_val = stmt(expr); // Parse the next statement
-        if (stmt_val == ERROR) {
-            return ERROR; // Propagate error
-        }
-
-        // Perform the operation based on the operator
         if (op == '*') {
             acc *= stmt_val;
         } else if (op == '/') {
             if (stmt_val == 0) {
                 fprintf(stderr, "Runtime Error: Division by zero.\n");
-                return ERROR; // Division by zero error
+                return ERROR;
             }
             acc /= stmt_val;
         }
 
-        op = mul_div_tok(expr); // Look for another multiplication or division operator
+        op = mul_div_tok(expr);
     }
 
-    return acc; // Return the accumulated result
-
+    return acc;
 }
 
 
 
-// Implementation of the stmt function
 int stmt(char **expr) {
-    // Parse the factor
     int factor_val = factor(expr);
     if (factor_val == ERROR) {
-        return ERROR; // Propagate errors
+        return ERROR;
     }
 
-    // Now handle any following comparison operations using ftail
     return ftail(expr, factor_val);
 }
 
-// Implement the ftail function
+
 int ftail(char **expr, int acc) {
-    char* comp_op = compare_tok(expr);  // Get the comparison operator if there is one
+    char* comp_op = compare_tok(expr);
     if (comp_op == NULL) {
-        // No comparison operator means we just return the accumulated value
+     
         return acc;
     }
 
-    // Consume the comparison operator
-    if (strlen(comp_op) == 2) { // For operators ==, !=, <=, >=
+    if (strlen(comp_op) == 2) {
         (*expr) += 2;
     } else {
-        (*expr) += 1; // For operators <, >
+        (*expr) += 1;
     }
 
-    // There is a comparison operator, evaluate the comparison
-    int factor_val = factor(expr);  // Evaluate the right side of the comparison
+    int factor_val = factor(expr); 
     if (factor_val == ERROR) {
-        return ERROR;  // Propagate the error
+        return ERROR;
     }
 
-    // Perform the comparison
+    int result;
     if (strcmp(comp_op, "<") == 0) {
-        return acc < factor_val;
+        result =  acc < factor_val;
     } else if (strcmp(comp_op, ">") == 0) {
-        return acc > factor_val;
+        result = acc > factor_val;
     } else if (strcmp(comp_op, "<=") == 0) {
-        return acc <= factor_val;
+        result = acc <= factor_val;
     } else if (strcmp(comp_op, ">=") == 0) {
-        return acc >= factor_val;
+        result = acc >= factor_val;
     } else if (strcmp(comp_op, "!=") == 0) {
-        return acc != factor_val;
+        result = acc != factor_val;
     } else if (strcmp(comp_op, "==") == 0) {
-        return acc == factor_val;
+        result = acc == factor_val;
+    }else{
+        fprintf(stderr, "Runtime Error: Invalid comparison operator.\n");
+        return ERROR;
     }
 
-    return ERROR;  // Return the last evaluated comparison result
+
+    return ftail(expr, result);
 }
 
-// Function to parse factors, potentially with exponentiation
 int factor(char **expr) {
-    int base = expp(expr);  // Parse the base expression or number
+    int base = expp(expr); 
     if (base == ERROR) {
-        return ERROR;  // Propagate errors
+        return ERROR;
     }
 
-    // Check for the exponentiation operator
+    
+    while (isspace(**expr)) (*expr)++; 
+    
     if (**expr == '^') {
-        (*expr)++;  // Consume '^'
-        int exponent = factor(expr);  // Recursively parse the exponent
+        (*expr)++; 
+        while (isspace(**expr)) (*expr)++;
+
+        int exponent = factor(expr); 
+
+
         if (exponent == ERROR) {
-            return ERROR;  // Propagate errors
+            return ERROR;
         }
+
+       if (exponent < 0) {
+            return ERROR;
+        }
+
+        if ((base != 0 && base != 1) && exponent > (log(INT_MAX) / log(base))) {
+            fprintf(stderr, "Error: Exponentiation overflow.\n");
+            return ERROR;
+        }
+        
+        errno = 0;
         double result = pow((double)base, (double)exponent);
 
-        if (isinf(result) || isnan(result)) {  // Check for infinite or NaN results
-            fprintf(stderr, "Error: Non-finite result in exponentiation.\n");
+        if (errno != 0 || result > INT_MAX || result < INT_MIN) { 
+            fprintf(stderr, "Error: Exponentiation result out of int range.\n");
             return ERROR;
         }
         return (int)result;
     }
 
-    return base;  // Return the base if there's no exponentiation
+    return base;
 }
 
-// Function to parse exponentiation base or a simple number
 int expp(char **current_expr) {
+
     while (isspace(**current_expr)) (*current_expr)++;
 
     if (**current_expr == '(') {
-        (*current_expr)++;  // Consume '('
-        int value = expr(current_expr);  // Recursively parse the expression inside the parentheses
+       // printf("Entering parentheses\n"); test prints
+        (*current_expr)++;
+
+        int value = expr(current_expr); 
+        // printf("Value inside parentheses: %d\n", value); test prints
         if (value == ERROR) {
-            return ERROR;  // Propagate the error if the internal expression is invalid
+           // printf("Error inside parentheses\n");
+            return ERROR; 
         }
+
+ 
         if (**current_expr != ')') {
-            return ERROR;  // Error if no closing ')'
+            fprintf(stderr, "Syntax Error: Missing closing parenthesis.\n");
+            return ERROR;  
         }
-        (*current_expr)++;  // Consume ')'  
-        return value; // Return the value of the sub-expression
+
+        (*current_expr)++; 
+        return value; 
+
     } else {
-        return num(current_expr);  // Parse number
+        return num(current_expr); 
     }
+
 }
 
-// Helper function to check if the character is a valid operator
-//int is_operator(char c) {
-    //return c == '+' || c == '-' || c == '*' || c == '/' || c == '^' ||
-           //c == '<' || c == '>' || c == '=' || c == '!';
-//}
 
-// Function to recognize addition and subtraction tokens
 char add_sub_tok(char **expr) {
     while (isspace(**expr)) (*expr)++;
 
@@ -237,38 +245,36 @@ char add_sub_tok(char **expr) {
     }
 
 
-    return (char)ERROR;
+    return '\0';
 }
 
-// Function to recognize multiplication and division tokens
 char mul_div_tok(char **expr) {
-    while (isspace(**expr)) (*expr)++; // Skip whitespace
+    while (isspace(**expr)) (*expr)++; 
 
-    // Check for multiplication or division operator
     char op = **expr;
     if (op == '*' || op == '/') {
-        return op; // Operator found, return it without consuming
+        (*expr)++;
+        return op; 
     }
 
-    return '\0'; // Not an operator, return null character
+    return '\0';
 }
 
-// Function to recognize comparison tokens
 char* compare_tok(char **expr) {
-    while (isspace(**expr)) (*expr)++;  // Skip any whitespace
+    while (isspace(**expr)) (*expr)++; 
 
     char first_char = **expr;
-    // Check for two-character comparison operators
+   
     if (first_char == '<' || first_char == '>' || first_char  == '!' || first_char == '=') {
         char second_char = *(*expr + 1);
 
         if (second_char == '=') {
-            static char result[3]; // Static to return a local array
+            static char result[3];
             result[0] = first_char;
             result[1] = second_char;
             result[2] = '\0';
-            *expr += 2;  // Consume both characters
-            return result;  // Return operators like "<=", ">=", "!=" or "=="
+            *expr += 2; 
+            return result; 
         }else if (first_char == '<' || first_char == '>') {
             static char result[2];
             result[0] = first_char;
@@ -278,35 +284,33 @@ char* compare_tok(char **expr) {
         }
     }
 
-    return NULL;  // Return NULL if no comparison token is found
+    return NULL;
 }
 
-// Function to parse and return a number from the expression
+
 int num(char **expr) {
-    int sign = 1; // Default sign is positive
-    while (isspace(**expr)) (*expr)++;  // Skip whitespace
-    
-    // Check for sign
+    int sign = 1; 
+    while (isspace(**expr)) (*expr)++;
+
     if (**expr == '+' || **expr == '-') {
         sign = (**expr == '-') ? -1 : 1;
-        (*expr)++; // Consume the sign
+        (*expr)++;
 
-        // After consuming a sign, there should be no space before the number
-        if (isspace(**expr)) {
-            return ERROR; // Syntax error due to space after sign
+        // After consuming a sign, there should be no space before the number       
+        if (isspace(**expr)) {                                                      
+            return ERROR; // Syntax error due to space after sign                   
         }
     }
 
+   
     char *next;
-    errno = 0; // To detect range errors
-    long value = strtol(*expr, &next, 10);  // Convert string to long
+    errno = 0;
+    long value = strtol(*expr, &next, 10);  
 
-    if (*expr == next || errno == ERANGE) {
-        // No digits were found, return error code
+    if (*expr == next || errno == ERANGE){
         return ERROR;
-    } else {
-        // Successfully parsed number, update the expression pointer
-        *expr = next;
-        return (int)value * sign;  // Cast to int if necessary, depending on the expected value range
     }
+
+    *expr = next;
+    return (int)value * sign;
 }
