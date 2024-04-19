@@ -70,7 +70,7 @@ int expr(char **expr) {
         return ERROR;
     
     int result = ttail(expr, term_val);
-  //  printf("Returned from ttail with value: %d, current_expr: %s\n", result, *expr); // Debug print
+//    printf("Returned from ttail with value: %d, current_expr: %s\n", result, *expr); // Debug print
 
     return result;
 
@@ -164,24 +164,28 @@ int stmt(char **expr) {
 
 
 int ftail(char **expr, int acc) {
+//    printf("No comparison operator found, returning acc=%d\n", acc);
     char* comp_op = compare_tok(expr);
     if (comp_op == NULL) {
-     
+//        printf("No comparison operator found, returning acc=%d\n", acc);
         return acc;
     }
 
-    if (strlen(comp_op) == 2) {
-        (*expr) += 2;
-    } else {
-        (*expr) += 1;
-    }
-
+//    printf("Comparison operator found: '%s'\n", comp_op);
+//    if (strlen(comp_op) == 2) {
+//        (*expr) += 2;
+//    } else {
+//        (*expr) += 1;
+//    }
+    
+//     printf("Current expression after consuming operator: '%s'\n", *expr);
     int factor_val = factor(expr); 
     if (factor_val == ERROR) {
         fprintf(stderr, "Error in ftail: factor returned ERROR\n");
         return ERROR;
     }
 
+//    printf("Factor value obtained: %d\n", factor_val);
     int result;
     if (strcmp(comp_op, "<") == 0) {
         result =  acc < factor_val;
@@ -200,8 +204,9 @@ int ftail(char **expr, int acc) {
         return ERROR;
     }
 
-
+//    printf("Result of comparison: %d\n", result);
     return ftail(expr, result);
+
 }
 
 int factor(char **expr) {
@@ -299,24 +304,25 @@ char mul_div_tok(char **expr) {
 }
 
 char* compare_tok(char **expr) {
+
     while (isspace(**expr)) (*expr)++; 
 
     char first_char = **expr;
-   
+
     if (first_char == '<' || first_char == '>' || first_char  == '!' || first_char == '=') {
         char second_char = *(*expr + 1);
-        
-        static char result[3];
-        result[0] = first_char;
-        result[1] = second_char;
-        result[2] = '\0';
 
-        if (second_char == '=') {
-            *expr += 2; 
+        static char result[3] = {'\0', '\0', '\0'};
+
+        if (second_char == '=' || (first_char == '!' && second_char == '=')) {
+            result[0] = first_char;
+            result[1] = second_char;
+            *expr += 2;
             return result; 
         }else if (first_char == '<' || first_char == '>') {
+            result[0] = first_char;
             *expr += 1;
-            result[1] = '\0';
+
             return result;
         }
     }
