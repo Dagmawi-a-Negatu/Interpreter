@@ -35,26 +35,64 @@
  * <num> ::=  {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}+
  */
 
-int bexpr(char *token) {
-    return expr(&token);
+int bexpr(char *token){
+    char *tempToken = token;
+    int result = expr(&tempToken);
+
+    if (result == ERROR) {
+        return ERROR; // If the expression is invalid, return error
+    
+    }
+
+    // Check for the semicolon after the expression
+    if (*tempToken != ';') {
+        fprintf(stderr, "Syntax Error: Expression must end with a semicolon\n");
+        return ERROR;
+    }
+
+    // Move past the semicolon
+    tempToken++;
+
+    // Check if the expression ends after the semicolon
+    if (*tempToken != '\0') {
+        fprintf(stderr, "Syntax Error: Unexpected characters after semicolon\n");
+        return ERROR;
+    }
+
+    return result;
 }
 
 int expr(char **expr) {
+//    printf("Entering expr with current_expr: %s\n", *expr); // Debug print
     int term_val = term(expr);
+//    printf("Returned from term with value: %d, current_expr: %s\n", term_val, *expr); // Debug print
     if (term_val == ERROR) 
         return ERROR;
     
-    return ttail(expr, term_val);
+    int result = ttail(expr, term_val);
+  //  printf("Returned from ttail with value: %d, current_expr: %s\n", result, *expr); // Debug print
+
+    return result;
+
 
    
 }
 
 int ttail(char **expr, int acc) {
-   char op = add_sub_tok(expr); 
+
+
+    char op = add_sub_tok(expr);
 
     while (op != '\0') {
+      //  printf("Processing ttail term for operation '%c'\n", op);
+
         int term_val = term(expr);
-        if (term_val == ERROR) return ERROR;
+        if (term_val == ERROR){
+            fprintf(stderr, "Error in ttail: term function returned ERROR\n");
+            return ERROR;
+        }
+
+       // printf("Term value obtained in ttail: %d\n", term_val);
 
         if (op == '+') {
             acc += term_val; 
@@ -63,16 +101,10 @@ int ttail(char **expr, int acc) {
         }
 
         op = add_sub_tok(expr);
+//        printf("Next operation found in ttail: '%c'\n", op);
     }
+    return acc;
 
-    if (**expr == ';' || **expr == '\0') {                                      
-        if (**expr == ';') {                                                    
-            (*expr)++;                                                          
-        }                                                                       
-        return acc;                                                             
-    } else {                                                                    
-        return ERROR;                                                           
-    } 
 }
 
 int term(char **expr) {
@@ -88,6 +120,11 @@ int stail(char **expr, int acc) {
 
     while (op != '\0') {
         int stmt_val = stmt(expr);        
+        
+        if (stmt_val == ERROR) {
+        // If stmt returns ERROR, the loop should break and stail should return ERROR
+        return ERROR;
+        }
 
         if (op == (char)ERROR) {
             return ERROR;
@@ -96,7 +133,7 @@ int stail(char **expr, int acc) {
         if (op == '*') {
             acc *= stmt_val;
         } else if (op == '/') {
-            if (stmt_val == 0) {
+           if (stmt_val == 0) {
                 fprintf(stderr, "Runtime Error: Division by zero.\n");
                 return ERROR;
             }
@@ -112,12 +149,17 @@ int stail(char **expr, int acc) {
 
 
 int stmt(char **expr) {
+
     int factor_val = factor(expr);
+
     if (factor_val == ERROR) {
+        fprintf(stderr, "Error in stmt: factor returned ERROR\n");
         return ERROR;
     }
 
-    return ftail(expr, factor_val);
+    int result = ftail(expr, factor_val);
+
+    return result;
 }
 
 
@@ -136,6 +178,7 @@ int ftail(char **expr, int acc) {
 
     int factor_val = factor(expr); 
     if (factor_val == ERROR) {
+        fprintf(stderr, "Error in ftail: factor returned ERROR\n");
         return ERROR;
     }
 
@@ -163,6 +206,7 @@ int ftail(char **expr, int acc) {
 
 int factor(char **expr) {
     int base = expp(expr); 
+
     if (base == ERROR) {
         return ERROR;
     }
@@ -171,21 +215,18 @@ int factor(char **expr) {
     while (isspace(**expr)) (*expr)++; 
     
     if (**expr == '^') {
+
         (*expr)++; 
         while (isspace(**expr)) (*expr)++;
 
         int exponent = factor(expr); 
 
-
-        if (exponent == ERROR) {
+        if (exponent == ERROR || exponent < 0) {
             return ERROR;
         }
 
-       if (exponent < 0) {
-            return ERROR;
-        }
 
-        if ((base != 0 && base != 1) && exponent > (log(INT_MAX) / log(base))) {
+        if (exponent > (log(INT_MAX) / log(base)) && base != 0 && base != 1) {
             fprintf(stderr, "Error: Exponentiation overflow.\n");
             return ERROR;
         }
@@ -204,33 +245,30 @@ int factor(char **expr) {
 }
 
 int expp(char **current_expr) {
-
     while (isspace(**current_expr)) (*current_expr)++;
 
-    if (**current_expr == '(') {
-       // printf("Entering parentheses\n"); test prints
+    if (**current_expr == '(') { 
         (*current_expr)++;
 
         int value = expr(current_expr); 
-        // printf("Value inside parentheses: %d\n", value); test prints
+
         if (value == ERROR) {
-           // printf("Error inside parentheses\n");
+            fprintf(stderr, "Error: Malformed expression inside parentheses.\n");
             return ERROR; 
         }
 
- 
         if (**current_expr != ')') {
-            fprintf(stderr, "Syntax Error: Missing closing parenthesis.\n");
-            return ERROR;  
+            fprintf(stderr, "Syntax Error: Expected ')' but got '%c'\n", **current_expr);
+            return ERROR;
         }
-
-        (*current_expr)++; 
-        return value; 
-
+        (*current_expr)++; // Consume the closing parenthesis
+        while (isspace(**current_expr)) (*current_expr)++;
+   
+        return value;
     } else {
         return num(current_expr); 
-    }
 
+    }
 }
 
 
@@ -267,19 +305,18 @@ char* compare_tok(char **expr) {
    
     if (first_char == '<' || first_char == '>' || first_char  == '!' || first_char == '=') {
         char second_char = *(*expr + 1);
+        
+        static char result[3];
+        result[0] = first_char;
+        result[1] = second_char;
+        result[2] = '\0';
 
         if (second_char == '=') {
-            static char result[3];
-            result[0] = first_char;
-            result[1] = second_char;
-            result[2] = '\0';
             *expr += 2; 
             return result; 
         }else if (first_char == '<' || first_char == '>') {
-            static char result[2];
-            result[0] = first_char;
-            result[1] = '\0';
             *expr += 1;
+            result[1] = '\0';
             return result;
         }
     }
@@ -297,7 +334,8 @@ int num(char **expr) {
         (*expr)++;
 
         // After consuming a sign, there should be no space before the number       
-        if (isspace(**expr)) {                                                      
+        if (isspace(**expr)) {
+            fprintf(stderr, "Syntax error: unexpected space after sign\n");
             return ERROR; // Syntax error due to space after sign                   
         }
     }
@@ -307,8 +345,12 @@ int num(char **expr) {
     errno = 0;
     long value = strtol(*expr, &next, 10);  
 
-    if (*expr == next || errno == ERANGE){
-        return ERROR;
+    if (*expr == next) {
+        fprintf(stderr, "Syntax error: no digits found\n");
+        return ERROR;  // No digits were parsed
+    } else if (errno == ERANGE) {
+        fprintf(stderr, "Error: number out of range\n");
+        return ERROR;  // Number out of valid long range
     }
 
     *expr = next;

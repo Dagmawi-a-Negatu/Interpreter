@@ -1,38 +1,14 @@
-3+2;
-Syntax OK
-Value is 5
-4-1;
-Syntax OK
-Value is 3
-5*6;
-Syntax OK
-Value is 30
-8/2;
-Syntax OK
-Value is 4
-1 + 2 < 9;
-Syntax OK
-Value is 2
-2 ^ 2 ^         3;
-Syntax OK
-Value is 256
-2+3*4;
+2 + 3 * 4;
 Syntax OK
 Value is 14
-4 + 8 * 10 < 9;
+(1 + 2) * 3;
 Syntax OK
-Value is 4
-2^3;
+Value is 9
+4 + 5 * (6 + 7);
 Syntax OK
-Value is 8
-(3+2)*4;
-Syntax Error
-6/(2+1);
-Syntax Error
-4-2^2;
+Value is 69
+2 * 2 + 3 * 3;
 Syntax OK
-Value is 0
-(2*3)+2;
-Syntax Error
-3*(4-1);
+Value is 13
+
 Syntax Error
