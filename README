@@ -1,0 +1,49 @@
+# Arithmetic Expression Interpreter README
+
+Authors:
+- Darwin Bueso Galdamez
+- Dagmawi Negatu
+
+Date of Submission: April 21, 2024
+
+## Overview
+
+The Arithmetic Expression Interpreter is a program written in C that evaluates 
+arithmetic expressions from a text file. It supports operations such as 
+addition, subtraction, multiplication, division, exponentiation, and respects 
+the conventional order of operations.
+
+## Project Files
+
+-  interpreter.c: The main program file that includes the entry point for 
+   interpreting and evaluating expressions.
+
+-  parser.c: Contains the parsing logic to analyze the syntax of each 
+   expression.
+
+-  parser.h: The header file for the parser, declaring necessary functions and 
+   constants.
+
+-  tokenizer.c: Processes the input text and breaks it into known tokens.
+
+-  tokenizer.h: Header file for the tokenizer with token categories and 
+   function prototypes.
+
+
+Input txt file:
+- unix_input.txt: Contains example expressions to be evaluated by the 
+  interpreter.
+
+Output txt file:
+- unix_output.txt: Output of the interpreter showing the evaluated results 
+  or syntax errors.
+
+
+### How to Compile and Run on Agora
+
+gcc -o interpreter interpreter.c parser.c -lm
+
+./interpreter unix_input.txt unix_output.txt
+
+
+For questions, please contact one of the authors. 

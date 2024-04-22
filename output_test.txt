@@ -71,6 +71,7 @@ Value is 0
 
 Syntax Error
 1 == 0
+===> ';' expected
 Syntax Error
 
 Syntax Error
@@ -80,4 +81,5 @@ Value is 4
 
 Syntax Error
 8-9-(7*6;
-Syntax Error
+Syntax OK
+Value is 999996
