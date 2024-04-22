@@ -81,5 +81,5 @@ Value is 4
 
 Syntax Error
 8-9-(7*6;
-Syntax OK
-Value is 999996
+===> ')' expected
+Syntax Error

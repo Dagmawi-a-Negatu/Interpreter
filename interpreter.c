@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
             case MISSING_SEMICOLON:
                 fprintf(outputFile, "===> ';' expected\nSyntax Error\n");
                 break;
-            case MISSING_CLOSING_PARENTHESIS:
+            case MISSING_CLOSING_PARENTHESIS: 
                 fprintf(outputFile, "===> ')' expected\nSyntax Error\n");
                 break;
             default:

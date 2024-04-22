@@ -45,15 +45,17 @@ int bexpr(char *token){
     char *tempToken = token;
     int result = expr(&tempToken);
 
-    if (result == ERROR) {
+    if (result == MISSING_CLOSING_PARENTHESIS){
+        return MISSING_CLOSING_PARENTHESIS;
+    }else if (result == ERROR) {
         return ERROR; // If the expression is invalid, return error
-    
     }
+    printf("Result is %d", result);
 
-    // Check for the semicolon after the expression
-    if (*tempToken != ';') {
+     //Check for the semicolon after the expression
+     if (*tempToken != ';') {
         return MISSING_SEMICOLON;
-    }
+     }
 
     // Move past the semicolon
     tempToken++;
@@ -64,7 +66,6 @@ int bexpr(char *token){
         return ERROR;
     }
 
-    printf("expression returned %d", result);
 
     return result;
 }
@@ -78,10 +79,12 @@ int bexpr(char *token){
  */
 int expr(char **expr) {
     int term_val = term(expr);
-    if (term_val == ERROR) 
-        return ERROR;
+    if (term_val == ERROR || term_val == MISSING_CLOSING_PARENTHESIS) 
+        return term_val;
     
     int result = ttail(expr, term_val);
+    if (result == ERROR || result == MISSING_CLOSING_PARENTHESIS)
+        return result;
 
     return result;
 
@@ -104,9 +107,8 @@ int ttail(char **expr, int acc) {
 
     while (op != '\0') {
         int term_val = term(expr);
-        if (term_val == ERROR){
-            fprintf(stderr, "Error in ttail: term function returned ERROR\n");
-            return ERROR;
+        if (term_val == ERROR || term_val == MISSING_CLOSING_PARENTHESIS || term_val == MISSING_SEMICOLON){
+            return term_val;
         }
 
         if (op == '+') {
@@ -131,10 +133,16 @@ int ttail(char **expr, int acc) {
  */
 int term(char **expr) {
     int stmt_val = stmt(expr);
-    if (stmt_val == ERROR) {
-        return ERROR;
+    if (stmt_val == ERROR || stmt_val == MISSING_CLOSING_PARENTHESIS) {
+        return stmt_val;
     }
-    return stail(expr, stmt_val);
+
+    int result = stail(expr, stmt_val);
+
+    if (result == ERROR || result == MISSING_CLOSING_PARENTHESIS)
+        return result;  // Pass the error up the call stack
+
+    return result;
 }
 
 /**
@@ -151,13 +159,13 @@ int stail(char **expr, int acc) {
     while (op != '\0') {
         int stmt_val = stmt(expr);        
         
-        if (stmt_val == ERROR) {
-            return ERROR;
+        if (stmt_val == ERROR || stmt_val == MISSING_CLOSING_PARENTHESIS || stmt_val == MISSING_SEMICOLON) {
+            return stmt_val;
         }
 
-        if (op == (char)ERROR) {
-            return ERROR;
-        }
+        //if (op == (char)ERROR) {
+         //   return ERROR;
+        //}
 
         if (op == '*') {
             acc *= stmt_val;
@@ -249,10 +257,14 @@ int ftail(char **expr, int acc) {
 int factor(char **expr) {
     int base = expp(expr); 
 
-    if (base == ERROR) {
-        return ERROR;
-    }
+    //if (base == ERROR) {
+      //  return ERROR;
+    //}
 
+    // Check if expp returned ERROR or MISSING_CLOSING_PARENTHESIS
+    if (base == ERROR || base == MISSING_CLOSING_PARENTHESIS) {
+        return base;  // Propagate the error upwards without further processing
+    }
     
     while (isspace(**expr)) (*expr)++; 
     
@@ -301,12 +313,14 @@ int expp(char **current_expr) {
 
         int value = expr(current_expr); 
 
-       // if (value == ERROR || value == MISSING_CLOSING_PARENTHESIS) {
-            //fprintf(stderr, "Error: Malformed expression inside parentheses.\n");
-      //      return value; 
-     //   }
-
+        printf("Debug: Current char after expr() in expp: '%c'\n", **current_expr); // Debugging output
+        
+        if (value == ERROR) {
+            return ERROR; // Return ERROR if the inner expression is invalid
+        }
+        
         if (**current_expr != ')') {
+            //fprintf(stderr, "Error: Expected ')' but got '%c'\n", **current_expr);
             return MISSING_CLOSING_PARENTHESIS;
         }
         (*current_expr)++; // Consume the closing parenthesis
