@@ -83,7 +83,7 @@ void process_nonmatch(FILE *out_file, char *token_ptr);
  *
  * @param token_ptr Pointer to the input string to be tokenized.
  */
-void get_token(char *);
+void get_token(char *token_ptr, FILE* out_file);
 
 /**
  * This function processes each lexeme found within the input text, prints 
@@ -131,3 +131,5 @@ TokenCategory match_token_category(char *);
  * @param lexeme String representing the lexeme to be analyzed and categorized.
  */
 void process_matching(FILE *, char * );
+
+void report_lexical_error(FILE* out_file, const char* error_text);
