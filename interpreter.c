@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "parser.h"
+#include "tokenizer.h"
 
 
 /**
@@ -60,6 +61,8 @@ int main(int argc, char *argv[]) {
                 fprintf(outputFile, "Syntax OK\nValue is %d\n", result);
                 break;
         }
+
+        get_token(line, outputFile);
 
     }
 
