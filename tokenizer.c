@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
    *                                                                            
    * @param token_ptr Pointer to the string to be tokenized                     
    */                                                                           
- void get_token(char *token_ptr)                                                
+ void get_token(char *token_ptr, FILE* out_file)                                                
  {                                                                              
                                                                                 
     const char *error;                                                          
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
                                                                                 
             // Process non-matching segment (e.g., log error, handle as invalid input)
             //process_nonmatch(out_file, nonmatch);                             
-            printf("Lexical error: %s\n", nonmatch);                            
+            report_lexical_error(out_file, nonmatch);                           
                                                                                 
                                                                                 
          }                                                                      
@@ -170,4 +170,8 @@ int main(int argc, char *argv[])
 int isNotWhitespaceOrTab(char* c) {                                             
     return *c != ' ' && *c != '\t';                                             
 }   
+
+void report_lexical_error(FILE* out_file, const char* error_text) {
+    fprintf(out_file, "Lexical error: %s\n", error_text);
+}
 
